@@ -39,34 +39,31 @@ model Room {
  bookings Booking[]
  createdAT DateTime @default(now())
  updatedAT DateTime @updatedAt
-//  Slots Slots[]
+ Slots Slots[]
 }
 
 model Booking{
   id String @id @default(auto()) @map("_id") @db.ObjectId
   user User @relation(fields: [userId], references: [id])
-  // slotId String @db.ObjectId
-  // slots Slots? @relation(fields: [slotId], references: [id])
+  slotId String @db.ObjectId
+  slots Slots? @relation(fields: [slotId], references: [id])
   userId String @db.ObjectId
   room Room @relation(fields: [roomId], references: [id])
   roomId String @db.ObjectId
   title String
   description String
-  startTime DateTime
-  endTime DateTime
+  date String
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
 }
 
-// model Slots{
-//   id String @id @default(auto()) @map("_id") @db.ObjectId
-//   room Room @relation(fields: [roomId], references: [id])
-//   roomId String @db.ObjectId
-//   startTime DateTime
-//   endTime DateTime
-//   isBooked Boolean @default(false)
-//   createAt DateTime @default(now())
-//   updateAt DateTime @updatedAt
-
-//   Booking Booking[]
-// }
+model Slots{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  room Room @relation(fields: [roomId], references: [id])
+  roomId String @db.ObjectId
+  date String
+  isBooked Boolean @default(false)
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  Booking Booking[]
+}

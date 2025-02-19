@@ -1,89 +1,98 @@
+import httpStatus from "http-status";
+import AppError from "../../errors/AppError";
 import prisma from "../../shared/prisma";
 import { Booking } from "@prisma/client";
 
 const createBooking = async (booking: Booking): Promise<Booking> => {
-  const { roomId, startTime, endTime } = booking;
+  const { roomId, slotId, date } = booking;
 
-  // Check if the room is already booked in the given time slot
+  // Ensure the room isn't booked for the same slot on the same date
   const existingBooking = await prisma.booking.findFirst({
     where: {
       roomId,
-      OR: [{ startTime: { lt: endTime }, endTime: { gt: startTime } }],
+      slotId,
+      date,
     },
   });
 
-  // If an overlapping booking exists, prevent double booking
   if (existingBooking) {
-    throw new Error("Room is already booked for this time slot.");
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "Room is already booked for this time slot on the selected date."
+    );
   }
 
-  // Create a new booking
-  return await prisma.booking.create({
-    data: booking,
-  });
+  try {
+    return await prisma.booking.create({ data: booking });
+  } catch (error) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Failed to create booking."
+    );
+  }
 };
 
 const getAllBookings = async (): Promise<Booking[]> => {
-  return await prisma.booking.findMany();
+  return await prisma.booking.findMany({
+    include: {
+      user: true,
+      room: true,
+      slots: true,
+    },
+  });
 };
 
 const getSingleBooking = async (id: string): Promise<Booking | null> => {
   return await prisma.booking.findUnique({
     where: { id },
+    include: {
+      user: true,
+      room: true,
+      slots: true,
+    },
   });
 };
+
 const updateBooking = async (
   id: string,
   updatedData: Partial<Booking>
 ): Promise<Booking | null> => {
-  // Check if the booking exists
   const existingBooking = await prisma.booking.findUnique({ where: { id } });
 
   if (!existingBooking) {
-    throw new Error("Booking not found.");
+    throw new AppError(httpStatus.NOT_FOUND, "Booking not found.");
   }
 
-  // If updating time, check for conflicts
-  if (updatedData.startTime && updatedData.endTime) {
-    const conflictingBooking = await prisma.booking.findFirst({
+  // Optional: Ensure the updated slot & room aren't causing conflicts
+  if (updatedData.roomId || updatedData.slotId || updatedData.date) {
+    const conflictBooking = await prisma.booking.findFirst({
       where: {
-        roomId: existingBooking.roomId,
-        id: { not: id },
-        OR: [
-          {
-            startTime: { lt: updatedData.endTime },
-            endTime: { gt: updatedData.startTime },
-          },
-        ],
+        roomId: updatedData.roomId || existingBooking.roomId,
+        slotId: updatedData.slotId || existingBooking.slotId,
+        date: updatedData.date || existingBooking.date,
+        NOT: { id },
       },
     });
 
-    if (conflictingBooking) {
-      throw new Error("Room is already booked for this updated time slot.");
+    if (conflictBooking) {
+      throw new AppError(
+        httpStatus.CONFLICT,
+        "Updated details conflict with an existing booking."
+      );
     }
   }
 
-  // Update the booking
-  return await prisma.booking.update({
-    where: { id },
-    data: updatedData,
-  });
+  return await prisma.booking.update({ where: { id }, data: updatedData });
 };
 
 const deleteBooking = async (id: string): Promise<Booking | null> => {
-  // Check if the booking exists
-  const existingBooking = await prisma.booking.findUnique({
-    where: { id },
-  });
+  const existingBooking = await prisma.booking.findUnique({ where: { id } });
 
   if (!existingBooking) {
-    throw new Error("Booking not found");
+    throw new AppError(httpStatus.NOT_FOUND, "Booking not found.");
   }
 
-  // Delete the booking if it exists
-  return await prisma.booking.delete({
-    where: { id },
-  });
+  return await prisma.booking.delete({ where: { id } });
 };
 
 export const bookingService = {
