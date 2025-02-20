@@ -10,7 +10,7 @@ router.post("/login", userController.loginUser);
 router.post("/refresh-token", userController.refreshTokenFromDb);
 router.get(
   "/profile",
-  auth(UserRole.ADMIN, UserRole.USER),
+  auth(UserRole.admin, UserRole.user),
   userController.getMyProfile
 );
 

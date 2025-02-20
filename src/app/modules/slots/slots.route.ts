@@ -5,9 +5,9 @@ import { UserRole } from "@prisma/client";
 
 const router = express.Router();
 
-router.post("/create-slot", auth(UserRole.ADMIN), slotController.createSlot);
-router.get("/", auth(UserRole.ADMIN), slotController.getAllSlots);
+router.post("/create-slot", auth(UserRole.admin), slotController.createSlot);
+router.get("/", auth(UserRole.admin), slotController.getAllSlots);
 router.get("/:id", slotController.getSingleSlot);
-router.delete("/:id", auth(UserRole.ADMIN), slotController.deleteSlot);
+router.delete("/:id", auth(UserRole.admin), slotController.deleteSlot);
 
 export const slotRoutes = router;

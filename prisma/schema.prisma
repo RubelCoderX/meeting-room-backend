@@ -27,14 +27,15 @@ model User {
 }
 
 enum UserRole {
-  USER
-  ADMIN
+  user
+  admin
 }
 
 model Room {
   id       String @id @default(auto()) @map("_id") @db.ObjectId
  name   String
  capacity Int
+ image String
  amenities String[]
  bookings Booking[]
  createdAT DateTime @default(now())
@@ -62,6 +63,8 @@ model Slots{
   room Room @relation(fields: [roomId], references: [id])
   roomId String @db.ObjectId
   date String
+  startTime String
+  endTime String
   isBooked Boolean @default(false)
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt

@@ -23,7 +23,7 @@ const createUser = async (data: User) => {
   const userData = {
     ...data,
     password: hashPassword,
-    role: UserRole.USER,
+    role: UserRole.user,
   };
 
   // Create and save the new user
@@ -62,7 +62,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
     jwtPlayload,
     config.jwt_access_secret as string,
     {
-      expiresIn: "10m",
+      expiresIn: "365d",
     }
   );
   const refreshToken = jwt.sign(
@@ -85,20 +85,19 @@ const getMyProfile = async (user: User): Promise<Partial<User>> => {
     select: {
       id: true,
       email: true,
-
       role: true,
     },
   });
 
   let profileInfo;
 
-  if (userInfo.role === UserRole.ADMIN) {
+  if (userInfo.role === UserRole.admin) {
     profileInfo = await prisma.user.findUnique({
       where: {
         email: userInfo.email,
       },
     });
-  } else if (userInfo.role === UserRole.USER) {
+  } else if (userInfo.role === UserRole.user) {
     profileInfo = await prisma.user.findUnique({
       where: {
         email: userInfo.email,
@@ -112,9 +111,9 @@ const refreshTokenIntoDB = async (token: string) => {
   // Check if the token is valid
   const decoded = verifyToken(token, config.jwt_refresh_secret as string);
 
-  const { email: userEmail } = decoded; // Fix variable name extraction
+  const { email: userEmail } = decoded;
   const user = await prisma.user.findUnique({
-    where: { email: userEmail }, // Fix incorrect Prisma query
+    where: { email: userEmail },
   });
 
   if (!user) {
@@ -122,7 +121,7 @@ const refreshTokenIntoDB = async (token: string) => {
   }
 
   const jwtPayload = {
-    userId: user.id, // Fix incorrect user ID
+    userId: user.id,
     userEmail: user.email,
     name: user.name,
     image: user.profileImg,
@@ -133,7 +132,7 @@ const refreshTokenIntoDB = async (token: string) => {
     expiresIn: "10m",
   });
 
-  return { accessToken }; // Ensure consistency in return value
+  return { accessToken };
 };
 
 export const userService = {

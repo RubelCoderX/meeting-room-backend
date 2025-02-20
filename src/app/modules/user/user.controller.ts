@@ -46,6 +46,7 @@ const getMyProfile = catchAsync(async (req, res) => {
 });
 
 const refreshTokenFromDb = catchAsync(async (req, res) => {
+  console.log(req.cookies);
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {

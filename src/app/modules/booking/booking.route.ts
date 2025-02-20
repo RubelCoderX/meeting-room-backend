@@ -7,23 +7,23 @@ const router = express.Router();
 
 router.post(
   "/create-booking",
-  auth(UserRole.USER),
+  auth(UserRole.user),
   bookingController.createBooking
 );
 router.get(
   "/",
-  auth(UserRole.USER, UserRole.ADMIN),
+  auth(UserRole.user, UserRole.admin),
   bookingController.getAllBookings
 );
 router.get(
   "/get-booking/:id",
-  auth(UserRole.USER),
+  auth(UserRole.user),
   bookingController.getSingleBooking
 );
-router.patch("/:id", auth(UserRole.USER), bookingController.updateBooking);
+router.patch("/:id", auth(UserRole.user), bookingController.updateBooking);
 router.delete(
   "/delete-booking/:id",
-  auth(UserRole.USER),
+  auth(UserRole.user),
   bookingController.deleteBooking
 );
 

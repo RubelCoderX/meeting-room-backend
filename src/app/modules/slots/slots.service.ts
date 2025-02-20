@@ -47,12 +47,25 @@ const createSlotIntoDB = async (payload: Slots) => {
 };
 
 const getAllSlotsFromDB = async () => {
-  return await prisma.slots.findMany();
+  return await prisma.slots.findMany({
+    include: {
+      room: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+    },
+  });
 };
 
 const getSingleSlotFromDB = async (id: string) => {
   return await prisma.slots.findUnique({
     where: { id },
+    include: {
+      room: true,
+    },
   });
 };
 
