@@ -15,6 +15,7 @@ router.get(
   auth(UserRole.user, UserRole.admin),
   bookingController.getAllBookings
 );
+router.get("/my-bookings", auth(UserRole.user), bookingController.getMyBooking);
 router.get(
   "/get-booking/:id",
   auth(UserRole.user),
@@ -23,7 +24,7 @@ router.get(
 router.patch("/:id", auth(UserRole.user), bookingController.updateBooking);
 router.delete(
   "/delete-booking/:id",
-  auth(UserRole.user),
+  auth(UserRole.user, UserRole.admin),
   bookingController.deleteBooking
 );
 

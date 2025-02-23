@@ -30,13 +30,26 @@ const loginUser = catchAsync(async (req, res) => {
     message: "User logged in successfully!",
     data: {
       user: result.userData,
-      accessToken,
+      accessToken: accessToken,
     },
   });
 });
 
+const getAllUsersFromDB = catchAsync(async (req, res) => {
+  const result = await userService.getAllUsers();
+  SendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Users retrieved successfully",
+    data: result,
+  });
+});
+
 const getMyProfile = catchAsync(async (req, res) => {
-  const result = await userService.getMyProfile(req.user);
+  const { email } = req.user;
+
+  const result = await userService.getMyProfile(email);
+
   SendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -46,22 +59,21 @@ const getMyProfile = catchAsync(async (req, res) => {
 });
 
 const refreshTokenFromDb = catchAsync(async (req, res) => {
-  console.log(req.cookies);
   const refreshToken = req.cookies.refreshToken;
 
-  if (!refreshToken) {
-    return SendResponse(res, {
-      statusCode: httpStatus.UNAUTHORIZED,
-      success: false,
-      message: "Refresh token is missing",
-      data: undefined,
-    });
-  }
+  // if (!refreshToken) {
+  //   return SendResponse(res, {
+  //     statusCode: httpStatus.UNAUTHORIZED,
+  //     success: false,
+  //     message: "Refresh token is missing",
+  //     data: undefined,
+  //   });
+  // }
 
   const result = await userService.refreshTokenIntoDB(refreshToken);
-  const { accessToken } = result;
+  const { createAccessToken, createRefreshToken } = result;
 
-  res.cookie("refreshToken", refreshToken, {
+  res.cookie("refreshToken", createRefreshToken, {
     secure: config.NODE_ENV === "production",
     httpOnly: true,
     sameSite: config.NODE_ENV === "production" ? "none" : "lax",
@@ -71,7 +83,17 @@ const refreshTokenFromDb = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Token refreshed successfully",
-    data: { accessToken },
+    data: { accessToken: createAccessToken },
+  });
+});
+
+const userDeleteFromDB = catchAsync(async (req, res) => {
+  const result = await userService.deleteUser(req.params.id);
+  SendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User deleted successfully",
+    data: result,
   });
 });
 
@@ -80,4 +102,6 @@ export const userController = {
   loginUser,
   getMyProfile,
   refreshTokenFromDb,
+  getAllUsersFromDB,
+  userDeleteFromDB,
 };

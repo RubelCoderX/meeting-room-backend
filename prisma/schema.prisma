@@ -32,7 +32,7 @@ enum UserRole {
 }
 
 model Room {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
  name   String
  capacity Int
  image String
@@ -53,7 +53,6 @@ model Booking{
   roomId String @db.ObjectId
   title String
   description String
-  date String
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
 }

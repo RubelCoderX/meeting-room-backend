@@ -70,6 +70,7 @@ const getSingleSlotFromDB = async (id: string) => {
 };
 
 const deleteSlotFromDB = async (id: string) => {
+  console.log("id", id);
   // Check if the slot exists
   const existingSlot = await prisma.slots.findUnique({
     where: { id },

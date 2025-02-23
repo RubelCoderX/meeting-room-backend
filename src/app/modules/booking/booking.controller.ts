@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import catchAsync from "../../../utils/catchAsync";
 import SendResponse from "../../../utils/sendResponse";
 import { bookingService } from "./booking.service";
+import { JwtPayload } from "jsonwebtoken";
 
 const createBooking = catchAsync(async (req, res) => {
   const result = await bookingService.createBooking(req.body);
@@ -19,6 +20,31 @@ const getAllBookings = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "All Bookings Retrieved Successfully",
+    data: result,
+  });
+});
+const getMyBooking = catchAsync(async (req, res) => {
+  const { userId, role } = req.user as JwtPayload;
+  const user = { userId, role };
+
+  // Extract pagination options
+  const { page = 1, limit = 10, sortBy, sortOrder } = req.query;
+
+  // Ensure valid numbers for pagination
+  const options = {
+    page: Number(page),
+    limit: Number(limit),
+    sortBy: sortBy?.toString() || "createAt",
+    sortOrder: sortOrder?.toString() || "desc",
+  };
+
+  // Fetch user-specific bookings
+  const result = await bookingService.myBookings(user, options);
+
+  SendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "My Booking retrieved successfully",
     data: result,
   });
 });
@@ -59,4 +85,5 @@ export const bookingController = {
   getSingleBooking,
   updateBooking,
   deleteBooking,
+  getMyBooking,
 };

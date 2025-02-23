@@ -16,11 +16,7 @@ router.patch(
   auth(UserRole.admin),
   roomController.updateRoom
 );
-router.get(
-  "/get-room/:id",
-  auth(UserRole.admin, UserRole.user),
-  roomController.getSingleRoom
-);
+router.get("/get-room/:id", roomController.getSingleRoom);
 router.delete(
   "/delete-room/:id",
   auth(UserRole.admin),

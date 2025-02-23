@@ -62,13 +62,13 @@ const loginUser = async (payload: { email: string; password: string }) => {
     jwtPlayload,
     config.jwt_access_secret as string,
     {
-      expiresIn: "365d",
+      expiresIn: "30d",
     }
   );
   const refreshToken = jwt.sign(
     jwtPlayload,
     config.jwt_refresh_secret as string,
-    { expiresIn: "10d" }
+    { expiresIn: "30d" }
   );
 
   return {
@@ -77,10 +77,10 @@ const loginUser = async (payload: { email: string; password: string }) => {
     refreshToken: refreshToken,
   };
 };
-const getMyProfile = async (user: User): Promise<Partial<User>> => {
+const getMyProfile = async (email: string) => {
   const userInfo = await prisma.user.findUniqueOrThrow({
     where: {
-      email: user?.email,
+      email: email,
     },
     select: {
       id: true,
@@ -105,15 +105,15 @@ const getMyProfile = async (user: User): Promise<Partial<User>> => {
     });
   }
 
-  return { ...userInfo, ...profileInfo };
+  return profileInfo;
 };
 const refreshTokenIntoDB = async (token: string) => {
   // Check if the token is valid
   const decoded = verifyToken(token, config.jwt_refresh_secret as string);
 
-  const { email: userEmail } = decoded;
+  const { email } = decoded;
   const user = await prisma.user.findUnique({
-    where: { email: userEmail },
+    where: { email },
   });
 
   if (!user) {
@@ -122,17 +122,54 @@ const refreshTokenIntoDB = async (token: string) => {
 
   const jwtPayload = {
     userId: user.id,
-    userEmail: user.email,
+    email: user.email,
     name: user.name,
     image: user.profileImg,
     role: user.role,
   };
 
-  const accessToken = jwt.sign(jwtPayload, config.jwt_access_secret as string, {
-    expiresIn: "10m",
-  });
+  const createAccessToken = jwt.sign(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    {
+      expiresIn: "30d",
+    }
+  );
+  const createRefreshToken = jwt.sign(
+    jwtPayload,
+    config.jwt_refresh_secret as string,
+    {
+      expiresIn: "30d",
+    }
+  );
 
-  return { accessToken };
+  return { createAccessToken, createRefreshToken };
+};
+const getAllUsers = async () => {
+  return await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      profileImg: true,
+      address: true,
+    },
+  });
+};
+
+const deleteUser = async (id: string) => {
+  // Check if the user exists
+  const existingUser = await prisma.user.findUnique({
+    where: { id },
+  });
+  if (!existingUser) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+  // If the user exists, delete it
+  return await prisma.user.delete({
+    where: { id },
+  });
 };
 
 export const userService = {
@@ -140,4 +177,6 @@ export const userService = {
   loginUser,
   getMyProfile,
   refreshTokenIntoDB,
+  getAllUsers,
+  deleteUser,
 };
